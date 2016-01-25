@@ -6,16 +6,18 @@
 
 echo -e "\nWelcome to install script!\n"
 echo "Choose what you want to do:"
+echo " 0 - Magento command list"
 echo " 1 - List enabled and disabled modules"
 echo " 2 - Enable Module"
 echo " 3 - Disable Module"
 echo " 4 - Clear cache"
 echo " 5 - Regenerate autoload files"
+echo " 6 - Install sample data"
+echo " 7 - Regenerate static content"
 echo " 8 - Change mode"
 echo " 9 - Set permission"
 echo " 10 - Auto generate urn schemas for PhpStorm"
 echo " 100 - Errors"
-echo -e " 0 - exit\n"
 
 bin/magento deploy:mode:show
 
@@ -25,15 +27,18 @@ read input_command
 echo ${input_command}
 
 case ${input_command} in
+    0 )
+        bin/magento --list
+        ;;
     1 )
         bin/magento module:status
         ;;
     2 )
         echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/cli/install-cli-subcommands-enable.html#instgde-cli-subcommands-enable-disable"
-#        echo -n "Please enter ModuleName > "
-#        read module_name
-#        echo ${module_name}
-#        bin/magento module:enable --clear-static-content ${module_name}
+        echo -n "Please enter ModuleName > "
+        read module_name
+        echo ${module_name}
+        bin/magento module:enable --clear-static-content ${module_name}
         bin/magento setup:upgrade
         ;;
     3 )
@@ -51,6 +56,27 @@ case ${input_command} in
         ;;
     5 )
         composer dump-autoload
+		;;
+    6 )
+        echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/sample-data-after-magento.html"
+        echo -n "Please choose [install|reset|remove] > "
+        read mode
+        case ${mode} in
+            install )
+                bin/magento sampledata:deploy
+            ;;
+            reset )
+                bin/magento sampledata:reset
+            ;;
+            remove )
+                bin/magento sampledata:remove
+            esac
+        composer update
+        bin/magento setup:upgrade
+		;;
+    7 )
+        echo "Regenerate static content"
+        bin/magento setup:static-content:deploy
 		;;
     8 )
         echo "See more on http://devdocs.magento.com/guides/v2.0/config-guide/bootstrap/magento-modes.html"
@@ -88,6 +114,6 @@ case ${input_command} in
                 echo "Good bye!"
             esac
 		;;
-    0 )
+    * )
         echo "Good bye!"
 esac
