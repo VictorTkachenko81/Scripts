@@ -49,10 +49,10 @@ case ${input_command} in
         bin/magento module:disable --clear-static-content ${module_name}
         ;;
     4 )
-#        bin/magento cache:flush
-        rm -rf var/generation/*
-        rm -rf var/cache/*
-        rm -rf var/page_cache
+        bin/magento cache:clean
+#        rm -rf var/generation/*
+#        rm -rf var/cache/*
+#        rm -rf var/page_cache
         ;;
     5 )
         composer dump-autoload
