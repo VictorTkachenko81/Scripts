@@ -17,6 +17,8 @@ echo " 7 - Regenerate static content"
 echo " 8 - Change mode"
 echo " 9 - Set permission"
 echo " 10 - Auto generate urn schemas for PhpStorm"
+echo " 11 - Regenerate/resize cache of images"
+echo " 12 - Find"
 echo " 100 - Errors"
 
 bin/magento deploy:mode:show
@@ -49,10 +51,27 @@ case ${input_command} in
         bin/magento module:disable --clear-static-content ${module_name}
         ;;
     4 )
-        bin/magento cache:clean
-#        rm -rf var/generation/*
-#        rm -rf var/cache/*
-#        rm -rf var/page_cache
+        echo -n "Clean cache [soft|hard] > "
+        read mode
+        case ${mode} in
+            hard )
+                rm -rf var/generation/*
+
+                #cleane cache
+                rm -rf var/cache/*
+                rm -rf var/page_cache/*
+
+                #clean theme
+                rm -rf var/view_preprocessing/*
+                rm -rf pub/static/*
+            ;;
+            soft )
+                bin/magento cache:clean
+            ;;
+            * )
+                echo "nothing to choose"
+        esac
+
         ;;
     5 )
         composer dump-autoload
@@ -98,6 +117,40 @@ case ${input_command} in
 	10 )
 #	    ToDo: create script for finding .idea/misc.xml
         bin/magento dev:urn-catalog:generate ../.idea/misc.xml
+		;;
+	11 )
+	    echo "new cache in /pub/media/catalog/product/cache in accordance with image metadata in view.xml configuration file"
+        bin/magento catalog:images:resize
+		;;
+	12 )
+	    echo -n "What you want to find [css|layout] > "
+        read mode
+        case ${mode} in
+            css )echo "
+<current_theme_dir>/web/css/
+<current_theme_dir>/<Namespace>_<Module>/web/css/
+<parent_theme_dir>/web/css/ (show in theme.xml in parent node)
+<module_dir>/view/frontend/web/css/
+<module_dir>/view/base/web/css/"
+            ;;
+            layout )echo "
+<current_theme_dir>/<Namespace>_<Module>/layout/
+<parent_theme(s)_dir>/<Namespace>_<Module>/layout/ (show in theme.xml in parent node)
+<module_dir>/view/frontend/layout/
+<module_dir>/view/base/layout/"
+            ;;
+            email )echo "
+http://devdocs.magento.com/guides/v2.0/frontend-dev-guide/templates/template-email.html
+admin/marketing/email templates
+header/footer <module_email>/<view>/<area><email>
+content <module_*sales*>/<view>/<area><email>"
+            ;;
+            3 )
+
+            ;;
+            4 )
+
+            esac
 		;;
 	100 )
         echo " 1 - There are no commands defined in the “deploy:mode” namespace."
