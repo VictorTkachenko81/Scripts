@@ -6,22 +6,15 @@
 
 echo -e "\nWelcome to install script!\n"
 echo "Choose what you want to do:"
-echo " 0 - Magento command list"
-echo " 1 - List enabled and disabled modules"
-echo " 2 - Enable Module"
-echo " 3 - Disable Module"
+echo " 0 - Start"
 echo " 4 - Clear cache"
-echo " 5 - Regenerate autoload files"
-echo " 6 - Install sample data"
-echo " 7 - Regenerate static content"
+echo " 7 - "
 echo " 8 - Change mode"
-echo " 9 - Set permission"
-echo " 10 - Auto generate urn schemas for PhpStorm"
 echo " 11 - Regenerate/resize cache of images"
 echo " 12 - Find"
 echo " 100 - Errors"
 
-bin/magento deploy:mode:show
+#bin/magento maintenance:status
 
 echo -n -e "\nPlease choose > "
 
@@ -30,43 +23,158 @@ echo ${input_command}
 
 case ${input_command} in
     0 )
-        bin/magento --list
-        ;;
-    1 )
-        bin/magento module:status
-        ;;
-    2 )
-        echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/cli/install-cli-subcommands-enable.html#instgde-cli-subcommands-enable-disable"
-        echo -n "Please enter ModuleName > "
-        read module_name
-        echo ${module_name}
-        bin/magento module:enable --clear-static-content ${module_name}
-        bin/magento setup:upgrade
-        ;;
-    3 )
-        echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/cli/install-cli-subcommands-enable.html#instgde-cli-subcommands-enable-disable"
-        echo -n "Please enter ModuleName > "
-        read module_name
-        echo ${module_name}
-        bin/magento module:disable --clear-static-content ${module_name}
-        ;;
-    4 )
-        echo -n "Clean cache [soft|hard] > "
+        echo " 0 - Install community"
+        echo " 1 - Command list"
+        echo " 2 - List enabled and disabled modules"
+        echo " 3 - Enable Module"
+        echo " 4 - Disable Module"
+        echo " 5 - Regenerate autoload files"
+        echo " 6 - Install sample data"
+        echo " 7 - Set permission"
+        echo " 8 - Auto generate urn schemas for PhpStorm"
+        echo -n -e "\nPlease choose > "
         read mode
         case ${mode} in
-            hard )
-                rm -rf var/generation/*
+            0 )
+                composer create-project --repository-url=https://repo.magento.com/ magento/project-community-edition
+            ;;
+            1 )
+                bin/magento --list
+            ;;
+            2 )
+                bin/magento module:status
+            ;;
+            3 )
+                echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/cli/install-cli-subcommands-enable.html#instgde-cli-subcommands-enable-disable"
+                echo -n "Please enter ModuleName > "
+                read module_name
+                echo ${module_name}
+                bin/magento module:enable --clear-static-content ${module_name}
+                bin/magento setup:upgrade
+            ;;
+            4 )
+                echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/cli/install-cli-subcommands-enable.html#instgde-cli-subcommands-enable-disable"
+                echo -n "Please enter ModuleName > "
+                read module_name
+                echo ${module_name}
+                bin/magento module:disable --clear-static-content ${module_name}
+            ;;
+            5 )
+                composer dump-autoload
+            ;;
+            6 )
+                echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/sample-data-after-magento.html"
+                echo -n "Please choose [install|reset|remove] > "
+                read mode
+                case ${mode} in
+                    install )
+                        bin/magento sampledata:deploy
+                    ;;
+                    reset )
+                        bin/magento sampledata:reset
+                    ;;
+                    remove )
+                        bin/magento sampledata:remove
+                    esac
+                composer update
+                bin/magento setup:upgrade
+            ;;
+            7 )
+                echo "Change permission for folders 770 and 660 for files"
+                find . -type d -exec chmod 770 {} \; && find . -type f -exec chmod 660 {} \; && chmod u+x bin/magento
+            ;;
+            8 )
+                #ToDo: create script for finding .idea/misc.xml
+                bin/magento dev:urn-catalog:generate ../.idea/misc.xml
+            ;;
+            9 )
+#bin/magento setup:install --base-url=http://magetest2.local.com/ \
+#--db-host=localhost --db-name=magento --db-user=magento --db-password=magento \
+#--admin-firstname=Magento --admin-lastname=User --admin-email=user@example.com \
+#--admin-user=admin --admin-password=admin123 --language=en_US \
+#--currency=USD --timezone=America/Chicago --use-rewrites=1
+            ;;
+            10 )
 
-                #cleane cache
+            ;;
+            * )
+                echo "nothing to choose"
+        esac
+        ;;
+    1 )
+
+        ;;
+    2 )
+
+        ;;
+    3 )
+
+        ;;
+    4 )
+        echo " 1 - bin/magento cache:clean"
+        echo " 2 - bin/magento cache:flush"
+        echo " 3 - clean cache folders"
+        echo " 4 - clean static folder"
+        echo " 5 - clean generation folder"
+        echo " 6 - clean css folder"
+        echo " 7 - clean all cache folders"
+        echo -n -e "\nPlease choose > "
+        read mode
+        case ${mode} in
+            1 )
+                bin/magento cache:clean
+            ;;
+            2 )
+                bin/magento cache:flush
+            ;;
+            3 )
+                echo "Clear cache"
+                rm -rf var/cache/*
+                rm -rf var/page_cache/*
+            ;;
+            4 )
+                echo "Clear static pages"
+                rm -rf pub/static/*
+
+                echo "Regenerate static content"
+                bin/magento setup:static-content:deploy
+            ;;
+            5 )
+                echo "Clear generated clases"
+                rm -rf var/generation/*
+            ;;
+            6 )
+                echo -n -e "\nPlease choose theme path like Magento/luma> "
+                read folder
+
+                echo "Clear static pages"
+                rm -rf pub/static/frontend/${folder}/en_US/css/*
+
+                echo "Clear source files"
+                rm -rf var/view_preprocessing/*
+
+                echo "Regenerate static content"
+                bin/magento setup:static-content:deploy
+            ;;
+            7 )
+                echo "Clear cache"
                 rm -rf var/cache/*
                 rm -rf var/page_cache/*
 
-                #clean theme
-                rm -rf var/view_preprocessing/*
+                echo "Clear static pages"
                 rm -rf pub/static/*
+
+                echo "Clear generated clases"
+                rm -rf var/generation/*
+
+                echo "Clear source files"
+                rm -rf var/view_preprocessing/*
+
+                echo "Regenerate static content"
+                bin/magento setup:static-content:deploy
             ;;
-            soft )
-                bin/magento cache:clean
+            8 )
+
             ;;
             * )
                 echo "nothing to choose"
@@ -74,28 +182,13 @@ case ${input_command} in
 
         ;;
     5 )
-        composer dump-autoload
+
 		;;
     6 )
-        echo "See more on http://devdocs.magento.com/guides/v2.0/install-gde/install/sample-data-after-magento.html"
-        echo -n "Please choose [install|reset|remove] > "
-        read mode
-        case ${mode} in
-            install )
-                bin/magento sampledata:deploy
-            ;;
-            reset )
-                bin/magento sampledata:reset
-            ;;
-            remove )
-                bin/magento sampledata:remove
-            esac
-        composer update
-        bin/magento setup:upgrade
+
 		;;
     7 )
-        echo "Regenerate static content"
-        bin/magento setup:static-content:deploy
+
 		;;
     8 )
         echo "See more on http://devdocs.magento.com/guides/v2.0/config-guide/bootstrap/magento-modes.html"
@@ -111,12 +204,10 @@ case ${input_command} in
             esac
 		;;
     9 )
-        echo "Change permission for folders 770 and 660 for files"
-        find . -type d -exec chmod 770 {} \; && find . -type f -exec chmod 660 {} \; && chmod u+x bin/magento
+
 		;;
 	10 )
-#	    ToDo: create script for finding .idea/misc.xml
-        bin/magento dev:urn-catalog:generate ../.idea/misc.xml
+
 		;;
 	11 )
 	    echo "new cache in /pub/media/catalog/product/cache in accordance with image metadata in view.xml configuration file"
