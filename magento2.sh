@@ -13,6 +13,7 @@ PHPCS="/home/victor/Modules/PHP_CodeSniffer/scripts/phpcs"
 
 echo -e "\nMagento 2 script.\n"
 echo "Choose what you want to do:"
+echo " 0 - Clean Project"
 echo " 1 - Modules"
 echo " 2 - Cache"
 echo " 3 - Database"
@@ -20,7 +21,9 @@ echo " 4 - Indexes"
 echo " 5 - Permissions"
 echo " 6 - Translate"
 echo " 7 - Check Code"
-echo " 8 - Magento Upgrade"
+echo " 8 - Check di"
+echo " 9 - Magento Upgrade"
+echo " 10 - Magento Admin User Create"
 echo -e "\nCurrent database: $MDB"
 
 #bin/magento maintenance:status
@@ -30,8 +33,25 @@ echo -n -e "\nPlease choose > "
 read input_command
 
 case ${input_command} in
+    0 )
+        rm -rf pub/static/_requirejs/*
+        rm -rf pub/static/adminhtml/*
+        rm -rf pub/static/frontend/*
+        rm -rf var/cache/*
+        rm -rf var/di/*
+        rm -rf var/generation/*
+        rm -rf var/log/*
+        rm -rf var/page_cache/*
+        rm -rf var/report/*
+        rm -rf var/tmp/*
+        rm -rf var/view_preprocessed/*
+        mysql --host=$MHOST --user=$MUSER --password=$MPASS -BNe "show tables" --database=$MDB | tr '\n' ',' | sed -e 's/,$//' | awk '{print "SET FOREIGN_KEY_CHECKS = 0;DROP TABLE IF EXISTS " $1 ";SET FOREIGN_KEY_CHECKS = 1;"}' | mysql --host=$MHOST --user=$MUSER --password=$MPASS --database=$MDB
+        mysql --host=$MHOST --user=$MUSER --password=$MPASS --database=$MDB < $DUMP
+        $PHP $MAGENTO setup:upgrade
+        $PHP $MAGENTO setup:static-content:deploy --area adminhtml
+        ;;
     1 )
-        php bin/magento module:status
+        $PHP $MAGENTO module:status
 
         echo -e "\n"
         echo " 1 - Enable module"
@@ -62,8 +82,10 @@ case ${input_command} in
     2 )
         echo -e "\n"
         echo " 0 - clean all folders"
-        echo " 1 - static data"
-        echo " 2 - var cache"
+        echo " 1 - clean static data"
+        echo " 2 - clean var cache"
+        echo " 3 - deploy adminhtml"
+        echo " 4 - deploy frontend"
         echo -n -e "\nPlease choose > "
 
         read mode
@@ -98,6 +120,14 @@ case ${input_command} in
                 rm -rf var/report/*
                 rm -rf var/tmp/*
                 rm -rf var/view_preprocessed/*
+            ;;
+            3 )
+                echo -e "\nDeploy adminhtml..."
+                $PHP $MAGENTO setup:static-content:deploy --area adminhtml
+            ;;
+            4 )
+                echo -e "\nDeploy frontend..."
+                $PHP $MAGENTO setup:static-content:deploy --theme Magento/luma --area frontend
             ;;
             * )
                 echo "nothing to choose"
@@ -155,15 +185,28 @@ case ${input_command} in
         echo -n "Please enter project directory > app/code/Mageside/"
         read project_directory
         $PHP $PHPCS --config-set m2-path ''
-        $PHP $PHPCS --standard=MEQP2 --extensions=php,phtml app/code/Mageside/$project_directory
+        $PHP $PHPCS app/code/Mageside/$project_directory --extensions=php,phtml
         ;;
     8 )
+        $PHP $MAGENTO setup:di:compile
+        ;;
+    9 )
         echo -n "Please enter Magento version you want to upgrade to > "
         read magento_version
         composer require magento/product-community-edition $magento_version --no-update
         composer update
         echo -e "\nUpgrade database..."
         $PHP $MAGENTO setup:upgrade
+        ;;
+    10 )
+        echo -e "\nCreate Magento 2 Admin User"
+        echo -n "Please enter email > "
+        read admin_email
+        echo -n "Please enter login > "
+        read admin_login
+        echo -n "Please enter password > "
+        read admin_pass
+        $PHP $MAGENTO admin:user:create --admin-firstname=$admin_login --admin-lastname=$admin_login --admin-email=$admin_email --admin-user=$admin_login --admin-password=$admin_pass
         ;;
     * )
         echo "Good bye!"

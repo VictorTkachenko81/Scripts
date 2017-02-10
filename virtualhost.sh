@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
+mainProjectsDirectory="www";
+userGroup="victor:victor";
+
 echo -n "Enter virtual host name > ";
 read virtualHostName;
 virtualHostFileName="$virtualHostName.conf";
 
-echo -n "Enter project directory > ";
-read projectDirectory;
+#echo -n "Enter project directory > ";
+#read projectDirectory;
+projectDirectory=$virtualHostName;
 
 echo -n "Enter root directory for index.php (Magento2:pub|Symfony:web)> ";
 read endPointDirectory;
@@ -17,9 +21,9 @@ read indexFile;
 
 echo "Before you continue, please check you parameters:";
 echo "Host name: $virtualHostName";
-echo "Project directory: $HOME/www/$projectDirectory/html";
-echo "Project root directory: $HOME/www/$projectDirectory/html$rootDirectory";
-echo "Project logs: $HOME/www/$projectDirectory/logs";
+echo "Project directory: $HOME/$mainProjectsDirectory/$projectDirectory/html";
+echo "Project root directory: $HOME/$mainProjectsDirectory/$projectDirectory/html$rootDirectory";
+echo "Project logs: $HOME/$mainProjectsDirectory/$projectDirectory/logs";
 echo "Index file: $indexFile";
 
 
@@ -29,10 +33,10 @@ case ${continue} in
     y )
         echo "<VirtualHost *:80>" >> ${virtualHostFileName};
         echo "  ServerName $virtualHostName" >> ${virtualHostFileName};
-        echo "  DocumentRoot $HOME/www/$projectDirectory/html$rootDirectory" >> ${virtualHostFileName};
-        echo "  ErrorLog $HOME/www/$projectDirectory/logs/error.log" >> ${virtualHostFileName};
-        echo "  CustomLog $HOME/www/$projectDirectory/logs/access.log combined" >> ${virtualHostFileName};
-        echo "  <Directory $HOME/www/$projectDirectory/html$rootDirectory>" >> ${virtualHostFileName};
+        echo "  DocumentRoot $HOME/$mainProjectsDirectory/$projectDirectory/html$rootDirectory" >> ${virtualHostFileName};
+        echo "  ErrorLog $HOME/$mainProjectsDirectory/$projectDirectory/logs/error.log" >> ${virtualHostFileName};
+        echo "  CustomLog $HOME/$mainProjectsDirectory/$projectDirectory/logs/access.log combined" >> ${virtualHostFileName};
+        echo "  <Directory $HOME/$mainProjectsDirectory/$projectDirectory/html$rootDirectory>" >> ${virtualHostFileName};
         echo "      DirectoryIndex $indexFile" >> ${virtualHostFileName};
         echo "      Options Indexes FollowSymLinks" >> ${virtualHostFileName};
         echo "      AllowOverride All" >> ${virtualHostFileName};
@@ -44,16 +48,16 @@ case ${continue} in
 
         echo "127.0.0.1 $virtualHostName" >> /etc/hosts;
 
-        mkdir "$HOME/www/$projectDirectory";
-        mkdir "$HOME/www/$projectDirectory/html";
-        mkdir "$HOME/www/$projectDirectory/logs";
+        mkdir "$HOME/$mainProjectsDirectory/$projectDirectory";
+        mkdir "$HOME/$mainProjectsDirectory/$projectDirectory/html";
+        mkdir "$HOME/$mainProjectsDirectory/$projectDirectory/logs";
 
         a2ensite ${virtualHostFileName};
 
         service apache2 restart;
 
-        chmod -R 0770 "$HOME/www/$projectDirectory";
-        chown -hR victor:victor "$HOME/www/$projectDirectory";
+        chmod -R 0770 "$HOME/$mainProjectsDirectory/$projectDirectory";
+        chown -hR $userGroup "$HOME/$mainProjectsDirectory/$projectDirectory";
         ;;
     * )
         echo "Good bye!";
